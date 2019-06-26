@@ -34,10 +34,10 @@ type watcherHub struct {
 	// count must be the first element to keep 64-bit alignment for atomic
 	// access
 
-	count int64 // current number of watchers.
+	count int64 // current number of watchers
 
 	mutex        sync.Mutex
-	watchers     map[string]*list.List
+	watchers     map[string]*list.List  // 维护node 和watchers间的映射关系
 	EventHistory *EventHistory
 }
 
@@ -86,7 +86,7 @@ func (wh *watcherHub) watch(key string, recursive, stream bool, index, storeInde
 
 	l, ok := wh.watchers[key]
 
-	var elem *list.Element
+	var elem *list.Element // *watcher
 
 	if ok { // add the new watcher to the back of the list
 		elem = l.PushBack(w)
@@ -145,12 +145,9 @@ func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 	l, ok := wh.watchers[nodePath]
 	if ok {
 		curr := l.Front()
-
 		for curr != nil {
 			next := curr.Next() // save reference to the next one in the list
-
 			w, _ := curr.Value.(*watcher)
-
 			originalPath := e.Node.Key == nodePath
 			if (originalPath || !isHidden(nodePath, e.Node.Key)) && w.notify(e, originalPath, deleted) {
 				if !w.stream { // do not remove the stream watcher
@@ -163,10 +160,8 @@ func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 					reportWatcherRemoved()
 				}
 			}
-
 			curr = next // update current to the next element in the list
 		}
-
 		if l.Len() == 0 {
 			// if we have notified all watcher in the list
 			// we can delete the list

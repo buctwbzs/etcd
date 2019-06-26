@@ -26,7 +26,7 @@ import (
 // PrevValue is the previous value of the node
 // TTL is time to live in second
 type NodeExtern struct {
-	Key           string      `json:"key,omitempty"`
+	Key           string      `json:"key,omitempty"` // node.Path
 	Value         *string     `json:"value,omitempty"`
 	Dir           bool        `json:"dir,omitempty"`
 	Expiration    *time.Time  `json:"expiration,omitempty"`

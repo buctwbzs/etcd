@@ -281,7 +281,7 @@ func (l *raftLog) isUpToDate(lasti, term uint64) bool {
 }
 
 func (l *raftLog) matchTerm(i, term uint64) bool {
-	t, err := l.term(i)
+	t, err := l.term(i) // 查询制定索引entry的term值
 	if err != nil {
 		return false
 	}

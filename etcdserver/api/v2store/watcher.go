@@ -21,14 +21,14 @@ type Watcher interface {
 }
 
 type watcher struct {
-	eventChan  chan *Event
-	stream     bool
+	eventChan  chan *Event // buffer length = 100
+	stream     bool // 如果为流式监听，则watcher被出发一次后，不会被移除
 	recursive  bool
-	sinceIndex uint64
-	startIndex uint64
+	sinceIndex uint64 // 从currentIndex开始监听
+	startIndex uint64 // 记录创建该watcher时的currentIndex值
 	hub        *watcherHub
-	removed    bool
-	remove     func()
+	removed    bool          // 标记当前watcher是否已经被删除
+	remove     func()        // 删除watcher的回调函数
 }
 
 func (w *watcher) EventChan() chan *Event {
@@ -38,7 +38,7 @@ func (w *watcher) EventChan() chan *Event {
 func (w *watcher) StartIndex() uint64 {
 	return w.startIndex
 }
-
+// 被watcher_hub.notify调用
 // notify function notifies the watcher. If the watcher interests in the given path,
 // the function will return true.
 func (w *watcher) notify(e *Event, originalPath bool, deleted bool) bool {
@@ -63,7 +63,7 @@ func (w *watcher) notify(e *Event, originalPath bool, deleted bool) bool {
 		// notifications are higher than our send rate.
 		// If this happens, we close the channel.
 		select {
-		case w.eventChan <- e:
+		case w.eventChan <- e:       // 当channel被填满阻塞时，将会丢失事件
 		default:
 			// We have missed a notification. Remove the watcher.
 			// Removing the watcher also closes the eventChan.

@@ -55,7 +55,7 @@ var (
 
 func startEtcdOrProxyV2() {
 	grpc.EnableTracing = false
-
+	// 初始化配置
 	cfg := newConfig()
 	defaultInitialCluster := cfg.ec.InitialCluster
 
@@ -141,9 +141,9 @@ func startEtcdOrProxyV2() {
 		}
 		switch which {
 		case dirMember:
-			stopped, errc, err = startEtcd(&cfg.ec)
+			stopped, errc, err = startEtcd(&cfg.ec)  // 启动etcd
 		case dirProxy:
-			err = startProxy(cfg)
+			err = startProxy(cfg) // 以代理模式启动etcd
 		default:
 			if lg != nil {
 				lg.Panic(
@@ -299,11 +299,11 @@ func startEtcdOrProxyV2() {
 
 // startEtcd runs StartEtcd in addition to hooks needed for standalone etcd.
 func startEtcd(cfg *embed.Config) (<-chan struct{}, <-chan error, error) {
-	e, err := embed.StartEtcd(cfg)
+	e, err := embed.StartEtcd(cfg)  // 启动封装后的etcdserver
 	if err != nil {
 		return nil, nil, err
 	}
-	osutil.RegisterInterruptHandler(e.Close)
+	osutil.RegisterInterruptHandler(e.Close) // 注册收到中断信号后执行的任务，移除资源占用
 	select {
 	case <-e.Server.ReadyNotify(): // wait for e.Server to join the cluster
 	case <-e.Server.StopNotify(): // publish aborted from 'ErrStopped'

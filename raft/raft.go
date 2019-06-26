@@ -248,32 +248,32 @@ func (c *Config) validate() error {
 }
 
 type raft struct {
-	id uint64
+	id uint64  // 当前节点在集群种的id
 
-	Term uint64
-	Vote uint64
+	Term uint64 // 任期
+	Vote uint64 // 在当前任期中当前节点将选票投给了哪个节点，未投票时为None
 
 	readStates []ReadState
 
 	// the log
-	raftLog *raftLog
+	raftLog *raftLog // 本地log
 
-	maxMsgSize         uint64
-	maxUncommittedSize uint64
+	maxMsgSize         uint64 //单条消息的最大字节数目
+	maxUncommittedSize uint64 //
 	prs                progressTracker
 
-	state StateType
+	state StateType  // 当前节点在集群中的角色
 
 	// isLearner is true if the local raft node is a learner.
-	isLearner bool
+	isLearner bool   // 当前节点是否为leadere
 
-	msgs []pb.Message
+	msgs []pb.Message // 缓存了当前节点尚未发送的信息，send方法向其中追加消息
 
 	// the leader id
-	lead uint64
+	lead uint64      // 当前集群中leader节点的id
 	// leadTransferee is id of the leader transfer target when its value is not zero.
 	// Follow the procedure defined in raft thesis 3.10.
-	leadTransferee uint64
+	leadTransferee uint64    // 用于集群中leader节点的转移，记录此次leader角色转移的目标节点的ID
 	// Only one conf change may be pending (in the log, but not yet
 	// applied) at a time. This is enforced via pendingConfIndex, which
 	// is set to a value >= the log index of the latest pending
@@ -292,22 +292,22 @@ type raft struct {
 	// or candidate.
 	// number of ticks since it reached last electionTimeout or received a
 	// valid message from current leader when it is a follower.
-	electionElapsed int
+	electionElapsed int // 选举计时器
 
 	// number of ticks since it reached last heartbeatTimeout.
 	// only leader keeps heartbeatElapsed.
-	heartbeatElapsed int
+	heartbeatElapsed int // 心跳计时器
 
 	checkQuorum bool
 	preVote     bool
 
-	heartbeatTimeout int
-	electionTimeout  int
+	heartbeatTimeout int // 心跳超时时间
+	electionTimeout  int // 选举超时时间
 	// randomizedElectionTimeout is a random number between
 	// [electiontimeout, 2 * electiontimeout - 1]. It gets reset
 	// when raft changes its state to follower or candidate.
-	randomizedElectionTimeout int
-	disableProposalForwarding bool
+	randomizedElectionTimeout int // 随机选举超时时间
+	disableProposalForwarding bool //
 
 	tick func()
 	step stepFunc

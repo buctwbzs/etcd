@@ -98,9 +98,9 @@ func newStore(namespaces ...string) *store {
 		s.Root.Add(newDir(s, namespace, s.CurrentIndex, s.Root, Permanent))
 	}
 	s.Stats = newStats()
-	s.WatcherHub = newWatchHub(1000)
+	s.WatcherHub = newWatchHub(1000) // 默认1000个event
 	s.ttlKeyHeap = newTtlKeyHeap()
-	s.readonlySet = types.NewUnsafeSet(append(namespaces, "/")...)
+	s.readonlySet = types.NewUnsafeSet(append(namespaces, "/")...) // 记录只读节点
 	return s
 }
 
@@ -144,14 +144,14 @@ func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
 		}
 	}()
 
-	n, err := s.internalGet(nodePath)
+	n, err := s.internalGet(nodePath) // 查找节点
 	if err != nil {
 		return nil, err
 	}
 
-	e := newEvent(Get, nodePath, n.ModifiedIndex, n.CreatedIndex)
+	e := newEvent(Get, nodePath, n.ModifiedIndex, n.CreatedIndex) // 封装get event
 	e.EtcdIndex = s.CurrentIndex
-	e.Node.loadInternalNode(n, recursive, sorted, s.clock)
+	e.Node.loadInternalNode(n, recursive, sorted, s.clock) // 通过封装node生成对应的NodeExtern，包括子节点
 
 	return e, nil
 }
@@ -181,8 +181,8 @@ func (s *store) Create(nodePath string, dir bool, value string, unique bool, exp
 		return nil, err
 	}
 
-	e.EtcdIndex = s.CurrentIndex
-	s.WatcherHub.notify(e)
+	e.EtcdIndex = s.CurrentIndex // 当前操作对应的etcd currentIndex
+	s.WatcherHub.notify(e)        // 将事件写入watcher.eventChan, buffer最大为100，若已填满，则该事件丢失。
 
 	return e, nil
 }
@@ -641,11 +641,10 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 }
 
 // InternalGet gets the node of the given nodePath.
-func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
+func (s *store) internalGet(nodePath string) (*node, *v2error.Error) { // 查找节点
 	nodePath = path.Clean(path.Join("/", nodePath))
 
 	walkFunc := func(parent *node, name string) (*node, *v2error.Error) {
-
 		if !parent.IsDir() {
 			err := v2error.NewError(v2error.EcodeNotDir, parent.Path, s.CurrentIndex)
 			return nil, err

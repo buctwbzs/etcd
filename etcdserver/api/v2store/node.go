@@ -173,9 +173,7 @@ func (n *node) GetChild(name string) (*node, *v2error.Error) {
 		return nil, v2error.NewError(v2error.EcodeNotDir, n.Path, n.store.CurrentIndex)
 	}
 
-	child, ok := n.Children[name]
-
-	if ok {
+	if child, ok := n.Children[name];ok {
 		return child, nil
 	}
 
@@ -190,15 +188,11 @@ func (n *node) Add(child *node) *v2error.Error {
 	if !n.IsDir() {
 		return v2error.NewError(v2error.EcodeNotDir, "", n.store.CurrentIndex)
 	}
-
 	_, name := path.Split(child.Path)
-
 	if _, ok := n.Children[name]; ok {
 		return v2error.NewError(v2error.EcodeNodeExist, "", n.store.CurrentIndex)
 	}
-
 	n.Children[name] = child
-
 	return nil
 }
 
@@ -275,24 +269,18 @@ func (n *node) Repr(recursive, sorted bool, clock clockwork.Clock) *NodeExtern {
 		// we do not use the index in the children slice directly
 		// we need to skip the hidden one
 		i := 0
-
 		for _, child := range children {
-
 			if child.IsHidden() { // get will not list hidden node
 				continue
 			}
-
 			node.Nodes[i] = child.Repr(recursive, sorted, clock)
-
 			i++
 		}
-
 		// eliminate hidden nodes
-		node.Nodes = node.Nodes[:i]
+		node.Nodes = node.Nodes[:i] // 丢弃不可见node
 		if sorted {
 			sort.Sort(node.Nodes)
 		}
-
 		return node
 	}
 

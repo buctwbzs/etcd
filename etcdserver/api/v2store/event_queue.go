@@ -17,8 +17,8 @@ package v2store
 type eventQueue struct {
 	Events   []*Event
 	Size     int
-	Front    int
-	Back     int
+	Front    int // 环形队列第一个索引
+	Back     int // 环形队列最后一个索引
 	Capacity int
 }
 
@@ -27,7 +27,7 @@ func (eq *eventQueue) insert(e *Event) {
 	eq.Back = (eq.Back + 1) % eq.Capacity
 
 	if eq.Size == eq.Capacity { //dequeue
-		eq.Front = (eq.Front + 1) % eq.Capacity
+		eq.Front = (eq.Front + 1) % eq.Capacity // 超出丢球front指向的元素
 	} else {
 		eq.Size++
 	}

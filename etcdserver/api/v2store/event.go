@@ -29,13 +29,13 @@ type Event struct {
 	Action    string      `json:"action"`
 	Node      *NodeExtern `json:"node,omitempty"`
 	PrevNode  *NodeExtern `json:"prevNode,omitempty"`
-	EtcdIndex uint64      `json:"-"`
-	Refresh   bool        `json:"refresh,omitempty"`
+	EtcdIndex uint64      `json:"-"`         // 记录操作完成时currentIndex的值
+	Refresh   bool        `json:"refresh,omitempty"`  //是否为刷新操作
 }
 
 func newEvent(action string, key string, modifiedIndex, createdIndex uint64) *Event {
 	n := &NodeExtern{
-		Key:           key,
+		Key:           key, // node.Path
 		ModifiedIndex: modifiedIndex,
 		CreatedIndex:  createdIndex,
 	}
