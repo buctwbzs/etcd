@@ -206,7 +206,7 @@ func newLessor(lg *zap.Logger, b backend.Backend, cfg LessorConfig) *lessor {
 		leaseMap:                  make(map[LeaseID]*Lease),
 		itemMap:                   make(map[LeaseItem]LeaseID),
 		leaseExpiredNotifier:      newLeaseExpiredNotifier(),
-		leaseCheckpointHeap:       make(LeaseQueue, 0),
+		leaseCheckpointHeap:       make(LeaseQueue, 0),// leaseWithTime最小堆
 		b:                         b,
 		minLeaseTTL:               cfg.MinLeaseTTL,
 		checkpointInterval:        checkpointInterval,

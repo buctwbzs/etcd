@@ -68,7 +68,7 @@ func SetPflagsFromEnv(prefix string, fs *pflag.FlagSet) error {
 
 // FlagToEnv converts flag string to upper-case environment variable key string.
 func FlagToEnv(prefix, name string) string {
-	return prefix + "_" + strings.ToUpper(strings.Replace(name, "-", "_", -1))
+	return prefix + "_" + strings.ToUpper(strings.Replace(name, "-", "_", -1)) // 所有的"-"转化为"_"
 }
 
 func verifyEnv(prefix string, usedEnvKey, alreadySet map[string]bool) {

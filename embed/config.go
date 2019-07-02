@@ -115,11 +115,11 @@ func init() {
 
 // Config holds the arguments for configuring an etcd server.
 type Config struct {
-	Name   string `json:"name"`
+	Name   string `json:"name"` // member name
 	Dir    string `json:"data-dir"`
 	WalDir string `json:"wal-dir"`
 
-	SnapshotCount uint64 `json:"snapshot-count"`
+	SnapshotCount uint64 `json:"snapshot-count"` // 触发生成快照的提交事务数
 
 	// SnapshotCatchUpEntries is the number of entries for a slow follower
 	// to catch-up after compacting the raft storage entries.
@@ -136,8 +136,8 @@ type Config struct {
 	// TickMs is the number of milliseconds between heartbeat ticks.
 	// TODO: decouple tickMs and heartbeat tick (current heartbeat tick = 1).
 	// make ticks a cluster wide configuration.
-	TickMs     uint `json:"heartbeat-interval"`
-	ElectionMs uint `json:"election-timeout"`
+	TickMs     uint `json:"heartbeat-interval"` // 心跳间隔
+	ElectionMs uint `json:"election-timeout"` // 选举超时
 
 	// InitialElectionTickAdvance is true, then local member fast-forwards
 	// election ticks to speed up "initial" leader election trigger. This
@@ -193,7 +193,7 @@ type Config struct {
 	DNSClusterServiceName string `json:"discovery-srv-name"`
 	Dproxy                string `json:"discovery-proxy"`
 	Durl                  string `json:"discovery"`
-	InitialCluster        string `json:"initial-cluster"`
+	InitialCluster        string `json:"initial-cluster"` // --name
 	InitialClusterToken   string `json:"initial-cluster-token"`
 	StrictReconfigCheck   bool   `json:"strict-reconfig-check"`
 	EnableV2              bool   `json:"enable-v2"`
@@ -366,48 +366,48 @@ type securityConfig struct {
 
 // NewConfig creates a new Config populated with default values.
 func NewConfig() *Config {
-	lpurl, _ := url.Parse(DefaultListenPeerURLs)
-	apurl, _ := url.Parse(DefaultInitialAdvertisePeerURLs)
-	lcurl, _ := url.Parse(DefaultListenClientURLs)
-	acurl, _ := url.Parse(DefaultAdvertiseClientURLs)
+	lpurl, _ := url.Parse(DefaultListenPeerURLs)           // http://localhost:2380
+	apurl, _ := url.Parse(DefaultInitialAdvertisePeerURLs) //  http://localhost:2380
+	lcurl, _ := url.Parse(DefaultListenClientURLs)         //  http://localhost:2379
+	acurl, _ := url.Parse(DefaultAdvertiseClientURLs)      //  http://localhost:2379
 	cfg := &Config{
-		MaxSnapFiles: DefaultMaxSnapshots,
-		MaxWalFiles:  DefaultMaxWALs,
+		MaxSnapFiles: DefaultMaxSnapshots, // 5
+		MaxWalFiles:  DefaultMaxWALs,      // 5
 
-		Name: DefaultName,
+		Name: DefaultName, // default
 
-		SnapshotCount:          etcdserver.DefaultSnapshotCount,
-		SnapshotCatchUpEntries: etcdserver.DefaultSnapshotCatchUpEntries,
+		SnapshotCount:          etcdserver.DefaultSnapshotCount,          // 100000
+		SnapshotCatchUpEntries: etcdserver.DefaultSnapshotCatchUpEntries, // 5000
 
 		MaxTxnOps:       DefaultMaxTxnOps,
 		MaxRequestBytes: DefaultMaxRequestBytes,
 
-		GRPCKeepAliveMinTime:  DefaultGRPCKeepAliveMinTime,
-		GRPCKeepAliveInterval: DefaultGRPCKeepAliveInterval,
-		GRPCKeepAliveTimeout:  DefaultGRPCKeepAliveTimeout,
+		GRPCKeepAliveMinTime:  DefaultGRPCKeepAliveMinTime,  // 5 * time.Second
+		GRPCKeepAliveInterval: DefaultGRPCKeepAliveInterval, // 2 * time.Hour
+		GRPCKeepAliveTimeout:  DefaultGRPCKeepAliveTimeout,  // 20 * time.Second
 
-		TickMs:                     100,
-		ElectionMs:                 1000,
-		InitialElectionTickAdvance: true,
+		TickMs:                     100,  // 心跳
+		ElectionMs:                 1000, // 选举超时
+		InitialElectionTickAdvance: true, //
 
 		LPUrls: []url.URL{*lpurl},
 		LCUrls: []url.URL{*lcurl},
 		APUrls: []url.URL{*apurl},
 		ACUrls: []url.URL{*acurl},
 
-		ClusterState:        ClusterStateFlagNew,
-		InitialClusterToken: "etcd-cluster",
+		ClusterState:        ClusterStateFlagNew, // 集群状态
+		InitialClusterToken: "etcd-cluster",      // 初始集群token
 
-		StrictReconfigCheck: DefaultStrictReconfigCheck,
-		Metrics:             "basic",
-		EnableV2:            DefaultEnableV2,
+		StrictReconfigCheck: DefaultStrictReconfigCheck, // 严格配置更新检查
+		Metrics:             "basic",                    // 监控
+		EnableV2:            DefaultEnableV2,            // 默认启用client v2
 
-		CORS:          map[string]struct{}{"*": {}},
-		HostWhitelist: map[string]struct{}{"*": {}},
+		CORS:          map[string]struct{}{"*": {}}, // 跨域
+		HostWhitelist: map[string]struct{}{"*": {}}, // hoist白名单
 
-		AuthToken:  "simple",
+		AuthToken:  "simple", // 授权token
 		BcryptCost: uint(bcrypt.DefaultCost),
-
+		// 预选举
 		PreVote: false, // TODO: enable by default in v3.5
 
 		loggerMu:            new(sync.RWMutex),
@@ -418,7 +418,7 @@ func NewConfig() *Config {
 		Debug:               false,
 		LogPkgLevels:        "",
 	}
-	cfg.InitialCluster = cfg.InitialClusterFromName(cfg.Name)
+	cfg.InitialCluster = cfg.InitialClusterFromName(cfg.Name) // "default=http://localhost:2380
 	return cfg
 }
 
@@ -729,6 +729,7 @@ func (cfg Config) InitialClusterFromName(name string) (ret string) {
 	for i := range cfg.APUrls {
 		ret = ret + "," + n + "=" + cfg.APUrls[i].String()
 	}
+	fmt.Printf("retretret: %s",ret)
 	return ret[1:]
 }
 

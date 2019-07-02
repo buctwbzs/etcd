@@ -86,7 +86,7 @@ type config struct {
 }
 
 // configFlags has the set of flags used for command line parsing a Config
-type configFlags struct {
+type  configFlags struct {
 	flagSet      *flag.FlagSet
 	clusterState *flags.SelectiveStringValue
 	fallback     *flags.SelectiveStringValue
@@ -271,7 +271,7 @@ func (cfg *config) parse(arguments []string) error {
 	default:
 		os.Exit(2)
 	}
-	if len(cfg.cf.flagSet.Args()) != 0 {
+	if len(cfg.cf.flagSet.Args()) != 0 { // non-flag arguments,不可传入多余参数
 		return fmt.Errorf("'%s' is not a valid flag", cfg.cf.flagSet.Arg(0))
 	}
 
@@ -288,8 +288,8 @@ func (cfg *config) parse(arguments []string) error {
 	// This env variable must be parsed separately
 	// because we need to determine whether to use or
 	// ignore the env variables based on if the config file is set.
-	if cfg.configFile == "" {
-		cfg.configFile = os.Getenv(flags.FlagToEnv("ETCD", "config-file"))
+	if cfg.configFile == "" { // 有配置文件，将忽略命令行参数
+		cfg.configFile = os.Getenv(flags.FlagToEnv("ETCD", "config-file")) // "ETCD_CONFIG_FILE"
 	}
 
 	if cfg.configFile != "" {

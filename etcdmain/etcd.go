@@ -59,7 +59,7 @@ func startEtcdOrProxyV2() {
 	cfg := newConfig()
 	defaultInitialCluster := cfg.ec.InitialCluster
 
-	err := cfg.parse(os.Args[1:])
+	err := cfg.parse(os.Args[1:]) // 传递给flagset.parse进行解析命令行参数
 	lg := cfg.ec.GetLogger()
 	if err != nil {
 		if lg != nil {

@@ -25,7 +25,7 @@ type LeaseWithTime struct {
 	time  int64
 	index int
 }
-
+// 最小堆
 type LeaseQueue []*LeaseWithTime
 
 func (pq LeaseQueue) Len() int { return len(pq) }
