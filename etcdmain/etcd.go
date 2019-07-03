@@ -274,7 +274,7 @@ func startEtcdOrProxyV2() {
 		}
 	}
 
-	osutil.HandleInterrupts(lg)
+	osutil.HandleInterrupts(lg) // 注册中断信号处理函数
 
 	// At this point, the initialization of etcd is done.
 	// The listeners are listening on the TCP ports and ready

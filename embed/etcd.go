@@ -26,6 +26,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -118,7 +119,10 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) { // 返回给上层封装后
 			"configuring peer listeners",
 			zap.Strings("listen-peer-urls", e.cfg.getLPURLs()),
 		)
+	} else { // add log
+		plog.Infof("listen-peer-urls:%s", strings.Join(e.cfg.getLPURLs(), ","))
 	}
+
 	if e.Peers, err = configurePeerListeners(cfg); err != nil {
 		return e, err
 	}
@@ -128,6 +132,8 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) { // 返回给上层封装后
 			"configuring client listeners",
 			zap.Strings("listen-client-urls", e.cfg.getLCURLs()),
 		)
+	} else { // add log
+		plog.Infof("listen-client-urls:%s", strings.Join(e.cfg.getLCURLs(), ","))
 	}
 	if e.sctxs, err = configureClientListeners(cfg); err != nil {
 		return e, err
