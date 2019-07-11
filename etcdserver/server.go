@@ -282,7 +282,7 @@ type EtcdServer struct {
 // NewServer creates a new EtcdServer from the supplied configuration. The
 // configuration is considered static for the lifetime of the EtcdServer.
 func NewServer(cfg ServerConfig) (srv *EtcdServer, err error) {
-	st := v2store.New(StoreClusterPrefix, StoreKeysPrefix)
+	st := v2store.New(StoreClusterPrefix, StoreKeysPrefix) // 初始化内存存储
 
 	var (
 		w  *wal.WAL
@@ -323,15 +323,16 @@ func NewServer(cfg ServerConfig) (srv *EtcdServer, err error) {
 			plog.Fatalf("create snapshot directory error: %v", err)
 		}
 	}
-	ss := snap.New(cfg.Logger, cfg.SnapDir())
+	// 初始快照
+	ss := snap.New(cfg.Logger, cfg.SnapDir()) // datadir/member/snap
 
-	bepath := cfg.backendPath()
+	bepath := cfg.backendPath() // datadir/member/snap/db
 	beExist := fileutil.Exist(bepath)
-	be := openBackend(cfg)
+	be := openBackend(cfg) // 初始化backend
 
 	defer func() {
 		if err != nil {
-			be.Close()
+			be.Close() //  关闭backend
 		}
 	}()
 
@@ -403,7 +404,7 @@ func NewServer(cfg ServerConfig) (srv *EtcdServer, err error) {
 		}
 		cl.SetStore(st)
 		cl.SetBackend(be)
-		id, n, s, w = startNode(cfg, cl, cl.MemberIDs())
+		id, n, s, w = startNode(cfg, cl, cl.MemberIDs())  // *** 先启动raft.Node
 		cl.SetID(id, cl.ID())
 
 	case haveWAL:
@@ -501,7 +502,7 @@ func NewServer(cfg ServerConfig) (srv *EtcdServer, err error) {
 		errorc:      make(chan error, 1),
 		v2store:     st,
 		snapshotter: ss,
-		r: *newRaftNode(
+		r: *newRaftNode(                               // *** 后启动 raftNode
 			raftNodeConfig{
 				lg:          cfg.Logger,
 				isIDRemoved: func(id uint64) bool { return cl.IsIDRemoved(types.ID(id)) },

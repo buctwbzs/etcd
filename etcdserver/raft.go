@@ -91,7 +91,7 @@ type raftNode struct {
 	raftNodeConfig
 
 	// a chan to send/receive snapshot
-	msgSnapC chan raftpb.Message
+	msgSnapC chan raftpb.Message // 来自于Ready实例的消息
 
 	// a chan to send out apply
 	applyc chan apply
@@ -164,7 +164,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 
 		for {
 			select {
-			case <-r.ticker.C:
+			case <-r.ticker.C: // 推进选举计时器、心跳计时器
 				r.tick()
 			case rd := <-r.Ready():
 				if rd.SoftState != nil {
@@ -206,12 +206,12 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 
 				notifyc := make(chan struct{}, 1)
 				ap := apply{
-					entries:  rd.CommittedEntries,
-					snapshot: rd.Snapshot,
+					entries:  rd.CommittedEntries, // 已经提交未应用的entris
+					snapshot: rd.Snapshot,         // 快照数据
 					notifyc:  notifyc,
 				}
 
-				updateCommittedIndex(&ap, rh)
+				updateCommittedIndex(&ap, rh) // 更行etcdServer中的committedIndex
 
 				select {
 				case r.applyc <- ap:
@@ -224,7 +224,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 				// For more details, check raft thesis 10.2.1
 				if islead {
 					// gofail: var raftBeforeLeaderSend struct{}
-					r.transport.Send(r.processMessages(rd.Messages))
+					r.transport.Send(r.processMessages(rd.Messages)) // 先对消息过滤，后发送
 				}
 
 				// gofail: var raftBeforeSave struct{}
@@ -310,7 +310,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 		}
 	}()
 }
-
+//  更新etcdServer committedIndex
 func updateCommittedIndex(ap *apply, rh *raftReadyHandler) {
 	var ci uint64
 	if len(ap.entries) != 0 {
@@ -328,7 +328,7 @@ func (r *raftNode) processMessages(ms []raftpb.Message) []raftpb.Message {
 	sentAppResp := false
 	for i := len(ms) - 1; i >= 0; i-- {
 		if r.isIDRemoved(ms[i].To) {
-			ms[i].To = 0
+			ms[i].To = 0   // transport.Send忽略 目标id为0的节点
 		}
 
 		if ms[i].Type == raftpb.MsgAppResp {

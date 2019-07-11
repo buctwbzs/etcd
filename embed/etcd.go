@@ -181,7 +181,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) { // 返回给上层封装后
 		InitialClusterToken:        token,
 		DiscoveryURL:               cfg.Durl,
 		DiscoveryProxy:             cfg.Dproxy,
-		NewCluster:                 cfg.IsNewCluster(),
+		NewCluster:                 cfg.IsNewCluster(), // 初始为true
 		PeerTLSInfo:                cfg.PeerTLSInfo,
 		TickMs:                     cfg.TickMs,
 		ElectionTicks:              cfg.ElectionTicks(),
@@ -218,7 +218,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) { // 返回给上层封装后
 	}
 
 	// buffer channel so goroutines on closed connections won't wait forever
-	e.errc = make(chan error, len(e.Peers)+len(e.Clients)+2*len(e.sctxs))
+	e.errc = make(chan error, len(e.Peers)+len(e.Clients)+2*len(e.sctxs))  // TODO 为什么乘2？
 
 	// newly started member ("memberInitialized==false")
 	// does not need corruption check
