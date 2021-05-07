@@ -22,7 +22,7 @@ import (
 	"os/exec"
 	"os/signal"
 
-	"go.etcd.io/etcd/client"
+	"go.etcd.io/etcd/client/v2"
 
 	"github.com/urfave/cli"
 )
@@ -109,7 +109,7 @@ func execWatchCommandFunc(c *cli.Context, ki client.KeysAPI) {
 		go func() {
 			err := cmd.Start()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, err.Error())
+				fmt.Fprint(os.Stderr, err.Error())
 				os.Exit(1)
 			}
 			cmd.Wait()

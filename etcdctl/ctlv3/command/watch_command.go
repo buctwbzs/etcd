@@ -23,7 +23,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/client/v3"
 
 	"github.com/spf13/cobra"
 )
@@ -98,7 +98,7 @@ func watchInteractiveFunc(cmd *cobra.Command, osArgs []string, envKey, envRange 
 	for {
 		l, err := reader.ReadString('\n')
 		if err != nil {
-			ExitWithError(ExitInvalidInput, fmt.Errorf("Error reading watch request line: %v", err))
+			ExitWithError(ExitInvalidInput, fmt.Errorf("error reading watch request line: %v", err))
 		}
 		l = strings.TrimSuffix(l, "\n")
 

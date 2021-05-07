@@ -24,22 +24,23 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.etcd.io/etcd/client"
-	"go.etcd.io/etcd/etcdserver"
-	"go.etcd.io/etcd/etcdserver/api"
-	"go.etcd.io/etcd/etcdserver/api/membership"
-	"go.etcd.io/etcd/etcdserver/api/snap"
-	"go.etcd.io/etcd/etcdserver/api/v2error"
-	"go.etcd.io/etcd/etcdserver/api/v2store"
-	pb "go.etcd.io/etcd/etcdserver/etcdserverpb"
-	"go.etcd.io/etcd/mvcc"
-	"go.etcd.io/etcd/mvcc/backend"
-	"go.etcd.io/etcd/mvcc/mvccpb"
-	"go.etcd.io/etcd/pkg/pbutil"
-	"go.etcd.io/etcd/pkg/types"
-	"go.etcd.io/etcd/raft/raftpb"
-	"go.etcd.io/etcd/wal"
-	"go.etcd.io/etcd/wal/walpb"
+	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
+	"go.etcd.io/etcd/api/v3/mvccpb"
+	"go.etcd.io/etcd/client/pkg/v3/types"
+	"go.etcd.io/etcd/client/v2"
+	"go.etcd.io/etcd/pkg/v3/pbutil"
+	"go.etcd.io/etcd/raft/v3/raftpb"
+	"go.etcd.io/etcd/server/v3/etcdserver"
+	"go.etcd.io/etcd/server/v3/etcdserver/api"
+	"go.etcd.io/etcd/server/v3/etcdserver/api/membership"
+	"go.etcd.io/etcd/server/v3/etcdserver/api/snap"
+	"go.etcd.io/etcd/server/v3/etcdserver/api/v2error"
+	"go.etcd.io/etcd/server/v3/etcdserver/api/v2store"
+	"go.etcd.io/etcd/server/v3/etcdserver/cindex"
+	"go.etcd.io/etcd/server/v3/mvcc"
+	"go.etcd.io/etcd/server/v3/mvcc/backend"
+	"go.etcd.io/etcd/server/v3/wal"
+	"go.etcd.io/etcd/server/v3/wal/walpb"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
@@ -91,7 +92,7 @@ func migrateCommandFunc(cmd *cobra.Command, args []string) {
 	}()
 
 	readKeys(reader, be)
-	mvcc.UpdateConsistentIndex(be, index)
+	cindex.UpdateConsistentIndex(be.BatchTx(), index)
 	err := <-errc
 	if err != nil {
 		fmt.Println("failed to transform keys")
@@ -128,7 +129,7 @@ func prepareBackend() backend.Backend {
 
 func rebuildStoreV2() (v2store.Store, uint64) {
 	var index uint64
-	cl := membership.NewCluster(zap.NewExample(), "")
+	cl := membership.NewCluster(zap.NewExample())
 
 	waldir := migrateWALdir
 	if len(waldir) == 0 {
@@ -208,15 +209,15 @@ func applyConf(cc raftpb.ConfChange, cl *membership.RaftCluster) {
 		if err := json.Unmarshal(cc.Context, m); err != nil {
 			panic(err)
 		}
-		cl.AddMember(m)
+		cl.AddMember(m, true)
 	case raftpb.ConfChangeRemoveNode:
-		cl.RemoveMember(types.ID(cc.NodeID))
+		cl.RemoveMember(types.ID(cc.NodeID), true)
 	case raftpb.ConfChangeUpdateNode:
 		m := new(membership.Member)
 		if err := json.Unmarshal(cc.Context, m); err != nil {
 			panic(err)
 		}
-		cl.UpdateRaftAttributes(m.ID, m.RaftAttributes)
+		cl.UpdateRaftAttributes(m.ID, m.RaftAttributes, true)
 	}
 }
 
